@@ -2,6 +2,7 @@
 #include <climits>
 #include <vector>
 #include <queue>
+#include <stack>
 
 using namespace std;
 
@@ -11,7 +12,7 @@ struct Edge {
     int weight;
 };
 
-// Function to implement Dijkstra's Algorithm
+// Function to implement Dijkstra's Algorithm with Path Reconstruction
 void dijkstra(int V, vector<vector<Edge>>& graph, int source) {
     // Create a priority queue to store vertices that are being processed
     priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>> pq;
@@ -19,6 +20,9 @@ void dijkstra(int V, vector<vector<Edge>>& graph, int source) {
     // Vector to store the shortest distance from source to each vertex
     vector<int> dist(V, INT_MAX);
     dist[source] = 0;
+
+    // To store the parent of each vertex for path reconstruction
+    vector<int> parent(V, -1);
 
     pq.push({0, source}); // Push the source vertex with distance 0
 
@@ -34,36 +38,68 @@ void dijkstra(int V, vector<vector<Edge>>& graph, int source) {
             // If the distance to v through u is shorter, update it
             if (dist[u] + weight < dist[v]) {
                 dist[v] = dist[u] + weight;
+                parent[v] = u; // Set u as the parent of v
                 pq.push({dist[v], v});
             }
         }
     }
 
-    // Output the shortest distances
-    cout << "Vertex\t\tDistance from Source" << endl;
+    // Output the shortest distances and reconstructed paths
+    cout << "\nVertex\t\tDistance from Source\t\tPath" << endl;
     for (int i = 0; i < V; ++i) {
-        cout << i << "\t\t" << (dist[i] == INT_MAX ? "INF" : to_string(dist[i])) << endl;
+        cout << i << "\t\t" << (dist[i] == INT_MAX ? "INF" : to_string(dist[i])) << "\t\t";
+        
+        if (dist[i] == INT_MAX) {
+            cout << "No path";
+        } else {
+            stack<int> path;
+            for (int v = i; v != -1; v = parent[v]) {
+                path.push(v);
+            }
+            while (!path.empty()) {
+                cout << path.top() << " ";
+                path.pop();
+            }
+        }
+        cout << endl;
     }
 }
 
+// Function to add edges to the graph
+void addEdge(vector<vector<Edge>>& graph, int u, int v, int weight) {
+    graph[u].push_back({v, weight});
+}
+
 int main() {
-    int V = 5; // Number of vertices
+    int V, E;
+    cout << "Enter the number of vertices: ";
+    cin >> V;
+    cout << "Enter the number of edges: ";
+    cin >> E;
+
     vector<vector<Edge>> graph(V);
 
-    // Adding edges to the graph
-    graph[0].push_back({1, 10});
-    graph[0].push_back({2, 5});
-    graph[1].push_back({2, 2});
-    graph[1].push_back({3, 1});
-    graph[2].push_back({1, 3});
-    graph[2].push_back({3, 9});
-    graph[2].push_back({4, 2});
-    graph[3].push_back({4, 4});
-    graph[4].push_back({0, 7});
-    graph[4].push_back({3, 6});
+    // Input graph edges
+    cout << "Enter the edges in the format: u v weight" << endl;
+    for (int i = 0; i < E; ++i) {
+        int u, v, weight;
+        cin >> u >> v >> weight;
+        addEdge(graph, u, v, weight);
+    }
 
-    int source = 0; // Starting vertex
-    dijkstra(V, graph, source);
+    int numSources;
+    cout << "Enter the number of source vertices: ";
+    cin >> numSources;
+
+    // Input multiple source vertices and run Dijkstra for each
+    for (int i = 0; i < numSources; ++i) {
+        int source;
+        cout << "Enter source vertex " << i + 1 << ": ";
+        cin >> source;
+
+        cout << "\nRunning Dijkstra for Source Vertex " << source << ":\n";
+        dijkstra(V, graph, source);
+    }
 
     return 0;
 }
